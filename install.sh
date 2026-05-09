@@ -208,7 +208,7 @@ AGENT_GITCONFIG_SANDBOX="${AGENT_GITCONFIG_SANDBOX:-$AGENT_CONFIG_HOME/gitconfig
 AGENT_DS4_BASE_URL="${AGENT_DS4_BASE_URL:-http://127.0.0.1:8000}"
 AGENT_DS4_MODEL="${AGENT_DS4_MODEL:-deepseek-v4-flash}"
 AGENT_PI_DS4_CONTEXT_WINDOW="${AGENT_PI_DS4_CONTEXT_WINDOW:-16384}"
-AGENT_PI_DS4_MAX_TOKENS="${AGENT_PI_DS4_MAX_TOKENS:-2048}"
+AGENT_PI_DS4_MAX_TOKENS="${AGENT_PI_DS4_MAX_TOKENS:-4096}"
 AGENT_REMOTE_SSH_HOST="${AGENT_REMOTE_SSH_HOST:-remote-accelerator.local}"
 AGENT_REMOTE_SSH_USER="${AGENT_REMOTE_SSH_USER:-$USER}"
 AGENT_REMOTE_DASHBOARD_PORT="${AGENT_REMOTE_DASHBOARD_PORT:-11000}"
@@ -283,7 +283,7 @@ if profile_enabled pi-ds4; then
           "reasoning": false,
           "input": ["text"],
           "contextWindow": ${AGENT_PI_DS4_CONTEXT_WINDOW:-16384},
-          "maxTokens": ${AGENT_PI_DS4_MAX_TOKENS:-2048},
+          "maxTokens": ${AGENT_PI_DS4_MAX_TOKENS:-4096},
           "compat": {
             "supportsStore": false,
             "supportsDeveloperRole": false,

@@ -42,7 +42,8 @@ Public templates must not include:
 - `profiles/ds4-claude`: Claude Code wrapper for a local ds4 server.
 - `profiles/ds4-codex`: Codex wrapper plus model catalog for a local ds4 server.
 - `profiles/pi-ds4`: Pi aliases for local ds4 and direct benchmark runs.
-- `pi/extensions/ds4-tools.ts`: Pi extension tuned for local ds4 tool use.
+- `pi/extensions/ds4-tools.ts`: Pi extension tuned for local ds4 tool use,
+  including a guarded multi-file scaffold writer for larger website/doc tasks.
 - `audit.sh`: a small public-surface leak check.
 - `local/`: ignored private overlay location for maintainers.
 

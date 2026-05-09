@@ -56,7 +56,7 @@ Important variables:
 - `AGENT_DS4_BASE_URL`: local ds4 server URL.
 - `AGENT_DS4_MODEL`: local ds4 model slug.
 - `AGENT_PI_DS4_CONTEXT_WINDOW`: Pi ds4 client window. Default: `16384`.
-- `AGENT_PI_DS4_MAX_TOKENS`: Pi ds4 response cap. Default: `2048`.
+- `AGENT_PI_DS4_MAX_TOKENS`: Pi ds4 response cap. Default: `4096`.
 - `AGENT_SPARK_HOST`: optional remote Spark host.
 - `AGENT_SPARK_USER`: optional remote Spark SSH user.
 - `AGENT_SPARK_MODEL`: remote Ollama model. Default: `qwen3-coder:30b`.
@@ -174,6 +174,12 @@ The wrappers expose:
 - `pi-ds4`
 - `pi-ds4-rawdog`, alias `pi-ds4-direct`, for benchmark runs without `nono`
 - `pi-ds4-bench` for a quick non-interactive smoke test
+
+The installed Pi ds4 extension adds deterministic request settings and a
+guarded multi-file scaffold path. For larger website/doc prompts with named
+files, it creates placeholders first, then writes one empty file at a time
+through `write_next_scaffold_file` so the local model does not rewrite the wrong
+file or stop with an empty parsed response.
 
 ## Safety Check
 
