@@ -1,0 +1,12 @@
+{
+  "model": "qwen3-coder:30b",
+  "env": {
+    "ANTHROPIC_BASE_URL": "http://127.0.0.1:4143",
+    "ANTHROPIC_AUTH_TOKEN": "local-ollama",
+    "ANTHROPIC_CUSTOM_MODEL_OPTION": "qwen3-coder:30b",
+    "ANTHROPIC_CUSTOM_MODEL_OPTION_NAME": "Remote Ollama coding model",
+    "ANTHROPIC_CUSTOM_MODEL_OPTION_DESCRIPTION": "Ollama qwen3-coder:30b via local Anthropic-format gateway",
+    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
+    "CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY": "0"
+  }
+}

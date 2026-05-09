@@ -15,7 +15,7 @@ patterns=(
   'claude-sandbox'
   'geo-prospects'
   '10\.10\.10\.[0-9]+'
-  'spark-[A-Za-z0-9_-]+'
+  'spark-[A-Za-z0-9_-]+\.local'
   'DGX'
   'SERIAL'
   'openai-oc'

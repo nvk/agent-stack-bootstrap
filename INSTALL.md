@@ -15,6 +15,7 @@ echo 'source "$HOME/.config/agent-stack/shell.zsh"' >> ~/.zshrc
 Open a new shell, then check:
 
 ```bash
+type claude-spark
 type claude-ds4
 type codex-ds4
 type pi-ds4
@@ -39,7 +40,10 @@ Important variables:
 - `AGENT_DS4_MODEL`: local ds4 model slug.
 - `AGENT_PI_DS4_CONTEXT_WINDOW`: Pi ds4 client window. Default: `16384`.
 - `AGENT_PI_DS4_MAX_TOKENS`: Pi ds4 response cap. Default: `2048`.
-- `AGENT_REMOTE_SSH_HOST`: optional remote accelerator host.
+- `AGENT_SPARK_HOST`: optional remote Spark host.
+- `AGENT_SPARK_USER`: optional remote Spark SSH user.
+- `AGENT_SPARK_MODEL`: remote Ollama model. Default: `qwen3-coder:30b`.
+- `AGENT_SPARK_GATEWAY_PORT`: local Anthropic gateway port. Default: `4143`.
 
 ## Existing Local Setups
 
@@ -80,6 +84,7 @@ generic setup.
 - `$HOME/.config/agent-stack/bondage.conf.template`
 - `$HOME/.config/nono/profiles/custom-coding-agent.json`
 - `$HOME/.config/nono/profiles/custom-pi-ds4.json`
+- `$HOME/.agent-profiles/.claude-profiles/spark`
 - `$HOME/.agent-profiles/.claude-profiles/ds4`
 - `$HOME/.agent-profiles/.codex-profiles/ds4`
 - `$HOME/.agent-profiles/.pi-profiles/ds4`
@@ -87,6 +92,23 @@ generic setup.
 - `$HOME/.local/share/agent-stack/pi/extensions/ds4-tools.ts`
 
 The exact paths can be changed in `profile.env`.
+
+## Spark
+
+The Spark profile assumes a private Ollama server reachable through SSH
+tunnels. Configure the remote placeholders in `profile.env` or in
+`profiles/spark/local.env` after installation.
+
+The wrappers expose:
+
+- `claude-spark`, alias `cspark`
+- `spark-ssh`
+- `spark-dashboard`
+- `spark-ollama`
+- `spark-tunnels`
+
+`claude-spark` starts a local Anthropic-format gateway in front of the tunneled
+Ollama endpoint and then runs Claude Code against `AGENT_SPARK_MODEL`.
 
 ## Bondage
 

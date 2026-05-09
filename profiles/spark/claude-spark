@@ -1,0 +1,93 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+PROFILE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SETTINGS="$PROFILE_DIR/settings.json"
+GATEWAY="$PROFILE_DIR/anthropic_ollama_gateway.py"
+CONFIG_ENV="${AGENT_STACK_PROFILE_ENV:-$HOME/.config/agent-stack/profile.env}"
+LOCAL_ENV="${SPARK_PROFILE_ENV:-$PROFILE_DIR/local.env}"
+
+if [[ -r "$CONFIG_ENV" ]]; then
+  set -a
+  # shellcheck source=/dev/null
+  source "$CONFIG_ENV"
+  set +a
+fi
+
+if [[ -r "$LOCAL_ENV" ]]; then
+  set -a
+  # shellcheck source=/dev/null
+  source "$LOCAL_ENV"
+  set +a
+fi
+
+SPARK_HOST="${SPARK_HOST:-${AGENT_SPARK_HOST:-${AGENT_REMOTE_SSH_HOST:-}}}"
+SPARK_USER="${SPARK_USER:-${AGENT_SPARK_USER:-${AGENT_REMOTE_SSH_USER:-$USER}}}"
+SPARK_SSH_CONFIG="${SPARK_SSH_CONFIG:-${AGENT_SPARK_SSH_CONFIG:-none}}"
+OLLAMA_PORT="${SPARK_OLLAMA_LOCAL_PORT:-${AGENT_SPARK_OLLAMA_LOCAL_PORT:-${OLLAMA_PORT:-11434}}}"
+SPARK_OLLAMA_PORT="${SPARK_OLLAMA_PORT:-${AGENT_SPARK_OLLAMA_PORT:-${AGENT_REMOTE_OLLAMA_PORT:-11434}}}"
+GATEWAY_PORT="${SPARK_GATEWAY_PORT:-${AGENT_SPARK_GATEWAY_PORT:-${GATEWAY_PORT:-4143}}}"
+MODEL="${SPARK_MODEL:-${AGENT_SPARK_MODEL:-${AGENT_REMOTE_OLLAMA_MODEL:-qwen3-coder:30b}}}"
+MODEL_LABEL="${SPARK_MODEL_LABEL:-${AGENT_SPARK_MODEL_LABEL:-Remote Ollama coding model}}"
+AUTH_TOKEN="${SPARK_AUTH_TOKEN:-${AGENT_SPARK_AUTH_TOKEN:-local-ollama}}"
+STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
+LOG="${SPARK_GATEWAY_LOG:-$STATE_HOME/agent-stack/remote-ollama-gateway.log}"
+
+mkdir -p "$(dirname "$LOG")"
+
+if [[ -z "$SPARK_HOST" ]]; then
+  cat >&2 <<EOF
+set SPARK_HOST or AGENT_SPARK_HOST before using this profile.
+Optional: put local values in $LOCAL_ENV.
+EOF
+  exit 2
+fi
+
+if [[ ! -x "$GATEWAY" ]]; then
+  echo "missing Spark gateway script: $GATEWAY" >&2
+  exit 1
+fi
+
+if ! curl -fsS "http://127.0.0.1:${OLLAMA_PORT}/api/tags" >/dev/null 2>&1; then
+  ssh -F "$SPARK_SSH_CONFIG" -fN \
+    -L "${OLLAMA_PORT}:localhost:${SPARK_OLLAMA_PORT}" \
+    "${SPARK_USER}@${SPARK_HOST}"
+fi
+
+for _ in {1..30}; do
+  if curl -fsS "http://127.0.0.1:${OLLAMA_PORT}/api/tags" >/dev/null 2>&1; then
+    break
+  fi
+  sleep 0.2
+done
+
+if ! curl -fsS "http://127.0.0.1:${GATEWAY_PORT}/health" >/dev/null 2>&1; then
+  nohup python3 "$GATEWAY" \
+    --host 127.0.0.1 \
+    --port "$GATEWAY_PORT" \
+    --ollama "http://127.0.0.1:${OLLAMA_PORT}" \
+    --model "$MODEL" \
+    >>"$LOG" 2>&1 &
+fi
+
+for _ in {1..50}; do
+  if curl -fsS "http://127.0.0.1:${GATEWAY_PORT}/health" >/dev/null 2>&1; then
+    break
+  fi
+  sleep 0.2
+done
+
+if ! curl -fsS "http://127.0.0.1:${GATEWAY_PORT}/health" >/dev/null 2>&1; then
+  echo "Spark gateway did not start; see $LOG" >&2
+  exit 1
+fi
+
+export ANTHROPIC_BASE_URL="http://127.0.0.1:${GATEWAY_PORT}"
+export ANTHROPIC_AUTH_TOKEN="$AUTH_TOKEN"
+export ANTHROPIC_CUSTOM_MODEL_OPTION="$MODEL"
+export ANTHROPIC_CUSTOM_MODEL_OPTION_NAME="$MODEL_LABEL"
+export ANTHROPIC_CUSTOM_MODEL_OPTION_DESCRIPTION="Ollama ${MODEL} via local Anthropic-format gateway"
+export CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
+export CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY=0
+
+exec claude --settings "$SETTINGS" --model "$MODEL" "$@"

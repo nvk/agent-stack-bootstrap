@@ -94,6 +94,22 @@ AGENT_DS4_BASE_URL="${AGENT_DS4_BASE_URL:-http://127.0.0.1:8000}"
 AGENT_DS4_MODEL="${AGENT_DS4_MODEL:-deepseek-v4-flash}"
 AGENT_PI_DS4_CONTEXT_WINDOW="${AGENT_PI_DS4_CONTEXT_WINDOW:-16384}"
 AGENT_PI_DS4_MAX_TOKENS="${AGENT_PI_DS4_MAX_TOKENS:-2048}"
+AGENT_REMOTE_SSH_HOST="${AGENT_REMOTE_SSH_HOST:-remote-accelerator.local}"
+AGENT_REMOTE_SSH_USER="${AGENT_REMOTE_SSH_USER:-$USER}"
+AGENT_REMOTE_DASHBOARD_PORT="${AGENT_REMOTE_DASHBOARD_PORT:-11000}"
+AGENT_REMOTE_OLLAMA_PORT="${AGENT_REMOTE_OLLAMA_PORT:-11434}"
+AGENT_REMOTE_OLLAMA_MODEL="${AGENT_REMOTE_OLLAMA_MODEL:-qwen3-coder:30b}"
+AGENT_SPARK_HOST="${AGENT_SPARK_HOST:-$AGENT_REMOTE_SSH_HOST}"
+AGENT_SPARK_USER="${AGENT_SPARK_USER:-$AGENT_REMOTE_SSH_USER}"
+AGENT_SPARK_SSH_CONFIG="${AGENT_SPARK_SSH_CONFIG:-none}"
+AGENT_SPARK_DASHBOARD_LOCAL_PORT="${AGENT_SPARK_DASHBOARD_LOCAL_PORT:-11000}"
+AGENT_SPARK_DASHBOARD_PORT="${AGENT_SPARK_DASHBOARD_PORT:-$AGENT_REMOTE_DASHBOARD_PORT}"
+AGENT_SPARK_OLLAMA_LOCAL_PORT="${AGENT_SPARK_OLLAMA_LOCAL_PORT:-11434}"
+AGENT_SPARK_OLLAMA_PORT="${AGENT_SPARK_OLLAMA_PORT:-$AGENT_REMOTE_OLLAMA_PORT}"
+AGENT_SPARK_GATEWAY_PORT="${AGENT_SPARK_GATEWAY_PORT:-4143}"
+AGENT_SPARK_MODEL="${AGENT_SPARK_MODEL:-$AGENT_REMOTE_OLLAMA_MODEL}"
+AGENT_SPARK_MODEL_LABEL="${AGENT_SPARK_MODEL_LABEL:-Remote Ollama coding model}"
+AGENT_SPARK_AUTH_TOKEN="${AGENT_SPARK_AUTH_TOKEN:-local-ollama}"
 
 mkdir -p \
   "$AGENT_CONFIG_HOME" \
@@ -101,6 +117,7 @@ mkdir -p \
   "$AGENT_CACHE_HOME" \
   "$AGENT_WORKSPACE" \
   "$AGENT_STACK_HOME/pi/extensions" \
+  "$AGENT_PROFILE_ROOT/.claude-profiles/spark" \
   "$AGENT_PROFILE_ROOT/.claude-profiles/ds4" \
   "$AGENT_PROFILE_ROOT/.codex-profiles/ds4" \
   "$AGENT_PROFILE_ROOT/.pi-profiles/ds4" \
@@ -111,6 +128,7 @@ install_file "$env_file" "$AGENT_CONFIG_HOME/profile.env"
 for nono_profile in "$repo_root"/nono/*.json; do
   install_file "$nono_profile" "$AGENT_NONO_PROFILE_ROOT/${nono_profile##*/}"
 done
+install_tree "$repo_root/profiles/spark" "$AGENT_PROFILE_ROOT/.claude-profiles/spark"
 install_tree "$repo_root/profiles/ds4-claude" "$AGENT_PROFILE_ROOT/.claude-profiles/ds4"
 install_tree "$repo_root/profiles/ds4-codex" "$AGENT_PROFILE_ROOT/.codex-profiles/ds4"
 install_tree "$repo_root/profiles/pi-ds4" "$AGENT_PROFILE_ROOT/.pi-profiles/ds4"
@@ -188,9 +206,21 @@ cat >"$tmp_shell" <<EOF
 
 export AI_WORKSPACE="\${AI_WORKSPACE:-$AGENT_WORKSPACE}"
 export AGENT_PROFILE_ROOT="\${AGENT_PROFILE_ROOT:-$AGENT_PROFILE_ROOT}"
+export AGENT_SPARK_HOST="\${AGENT_SPARK_HOST:-$AGENT_SPARK_HOST}"
+export AGENT_SPARK_USER="\${AGENT_SPARK_USER:-$AGENT_SPARK_USER}"
+export AGENT_SPARK_SSH_CONFIG="\${AGENT_SPARK_SSH_CONFIG:-$AGENT_SPARK_SSH_CONFIG}"
+export AGENT_SPARK_DASHBOARD_LOCAL_PORT="\${AGENT_SPARK_DASHBOARD_LOCAL_PORT:-$AGENT_SPARK_DASHBOARD_LOCAL_PORT}"
+export AGENT_SPARK_DASHBOARD_PORT="\${AGENT_SPARK_DASHBOARD_PORT:-$AGENT_SPARK_DASHBOARD_PORT}"
+export AGENT_SPARK_OLLAMA_LOCAL_PORT="\${AGENT_SPARK_OLLAMA_LOCAL_PORT:-$AGENT_SPARK_OLLAMA_LOCAL_PORT}"
+export AGENT_SPARK_OLLAMA_PORT="\${AGENT_SPARK_OLLAMA_PORT:-$AGENT_SPARK_OLLAMA_PORT}"
+export AGENT_SPARK_GATEWAY_PORT="\${AGENT_SPARK_GATEWAY_PORT:-$AGENT_SPARK_GATEWAY_PORT}"
+export AGENT_SPARK_MODEL="\${AGENT_SPARK_MODEL:-$AGENT_SPARK_MODEL}"
+export AGENT_SPARK_MODEL_LABEL="\${AGENT_SPARK_MODEL_LABEL:-$AGENT_SPARK_MODEL_LABEL}"
+export AGENT_SPARK_AUTH_TOKEN="\${AGENT_SPARK_AUTH_TOKEN:-$AGENT_SPARK_AUTH_TOKEN}"
 export WIKI_SKILL="\${WIKI_SKILL:-\$AI_WORKSPACE/llm-wiki/plugins/llm-wiki-opencode/skills/wiki-manager/SKILL.md}"
 
 for _agent_profile_aliases in \\
+  "\$AGENT_PROFILE_ROOT/.claude-profiles/spark/aliases.zsh" \\
   "\$AGENT_PROFILE_ROOT/.claude-profiles/ds4/aliases.zsh" \\
   "\$AGENT_PROFILE_ROOT/.codex-profiles/ds4/aliases.zsh" \\
   "\$AGENT_PROFILE_ROOT/.pi-profiles/ds4/aliases.zsh"; do
@@ -216,6 +246,7 @@ Installed files:
   env:              $AGENT_CONFIG_HOME/profile.env
   shell snippet:    $AGENT_CONFIG_HOME/shell.zsh
   nono profiles:    $AGENT_NONO_PROFILE_ROOT
+  Claude Spark:     $AGENT_PROFILE_ROOT/.claude-profiles/spark
   Claude ds4:       $AGENT_PROFILE_ROOT/.claude-profiles/ds4
   Codex ds4:        $AGENT_PROFILE_ROOT/.codex-profiles/ds4
   Pi ds4:           $AGENT_PROFILE_ROOT/.pi-profiles/ds4
@@ -232,6 +263,7 @@ Next step:
   echo 'source "$AGENT_CONFIG_HOME/shell.zsh"' >> ~/.zshrc
 
 Then open a new shell and test:
+  type claude-spark
   type claude-ds4
   type codex-ds4
   type pi-ds4

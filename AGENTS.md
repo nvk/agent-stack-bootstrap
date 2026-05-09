@@ -58,6 +58,7 @@ echo 'source "$HOME/.config/agent-stack/shell.zsh"' >> ~/.zshrc
 Common profile checks:
 
 ```bash
+type claude-spark
 type claude-ds4
 type codex-ds4
 type pi-ds4
@@ -70,10 +71,13 @@ Before finishing changes, run:
 ```bash
 bash -n install.sh
 bash -n audit.sh
+bash -n profiles/spark/claude-spark
+python3 -c 'from pathlib import Path; [compile(Path(p).read_text(), p, "exec") for p in ("profiles/spark/anthropic_ollama_gateway.py", "profiles/ds4-codex/openai_responses_to_ds4.py")]'
 bash -n profiles/ds4-claude/claude-ds4
 bash -n profiles/ds4-codex/codex-ds4
 jq . nono/custom-coding-agent.json >/dev/null
 jq . nono/custom-pi-ds4.json >/dev/null
+jq . profiles/spark/settings.json >/dev/null
 jq . profiles/ds4-claude/settings.json >/dev/null
 jq . profiles/ds4-codex/model_catalog.json >/dev/null
 /opt/homebrew/bin/node --check pi/extensions/ds4-tools.ts 2>/dev/null || node --check pi/extensions/ds4-tools.ts
@@ -102,7 +106,7 @@ AGENT_GITCONFIG_SANDBOX=/tmp/agent-stack-install-test/config/gitconfig-sandbox \
 Then verify:
 
 ```bash
-zsh -lc 'source /tmp/agent-stack-install-test/config/shell.zsh; whence -w claude-ds4 codex-ds4 pi-ds4 cds4 xds4'
+zsh -lc 'source /tmp/agent-stack-install-test/config/shell.zsh; whence -w claude-spark cspark spark-ssh spark-tunnels claude-ds4 codex-ds4 pi-ds4 cds4 xds4'
 ```
 
 ## Editing Guidance

@@ -37,6 +37,7 @@ Public templates must not include:
 - `profile.env.sample`: variables a future installer can ask for or infer.
 - `bondage.conf.template`: launcher profile matrix with placeholder values.
 - `nono/*.json`: generic sandbox profiles that use `$HOME/agent-workspace`.
+- `profiles/spark`: Claude Code wrapper for a remote Spark Ollama server.
 - `profiles/ds4-claude`: Claude Code wrapper for a local ds4 server.
 - `profiles/ds4-codex`: Codex wrapper plus model catalog for a local ds4 server.
 - `profiles/pi-ds4`: Pi aliases for local ds4 and direct benchmark runs.
@@ -53,8 +54,12 @@ git clone https://github.com/nvk/agent-stack-bootstrap.git
 cd agent-stack-bootstrap
 ./install.sh
 echo 'source "$HOME/.config/agent-stack/shell.zsh"' >> ~/.zshrc
-type claude-ds4 codex-ds4 pi-ds4
+type claude-spark claude-ds4 codex-ds4 pi-ds4
 ```
+
+The installed shell snippet also exposes `cspark`, `spark-ssh`,
+`spark-dashboard`, `spark-ollama`, and `spark-tunnels` for the optional remote
+Spark profile.
 
 See `INSTALL.md` for the full local setup flow.
 
