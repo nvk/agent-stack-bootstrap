@@ -41,8 +41,8 @@ Public templates must not include:
 - `profiles/spark`: Claude Code wrapper for a remote Spark Ollama server.
 - `profiles/ds4-claude`: Claude Code wrapper for a local ds4 server.
 - `profiles/ds4-codex`: Codex wrapper plus model catalog for a local ds4 server.
-- `profiles/pi-ds4`: Pi aliases for local ds4 and direct benchmark runs.
-- `pi/extensions/ds4-tools.ts`: Pi extension tuned for local ds4 tool use.
+- `profiles/pi-ds4`: no-tools Pi aliases for the upstream `mitsuhiko/pi-ds4`
+  extension and direct benchmark runs.
 - `audit.sh`: a small public-surface leak check.
 - `local/`: ignored private overlay location for maintainers.
 
@@ -57,6 +57,13 @@ cd agent-stack-bootstrap
 echo 'source "$HOME/.config/agent-stack/shell.zsh"' >> ~/.zshrc
 type claude-safe codex-safe opencode-safe pi-safe frontier-safe-verify
 type claude-spark claude-ds4 codex-ds4 pi-ds4
+```
+
+For the local ds4 Pi profile, install the upstream Pi extension into the
+profile state directory before first use:
+
+```bash
+pi-ds4-install
 ```
 
 By default, `./install.sh` installs all optional profile groups. Use

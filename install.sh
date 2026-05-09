@@ -207,8 +207,9 @@ AGENT_NONO_PROFILE_ROOT="${AGENT_NONO_PROFILE_ROOT:-$HOME/.config/nono/profiles}
 AGENT_GITCONFIG_SANDBOX="${AGENT_GITCONFIG_SANDBOX:-$AGENT_CONFIG_HOME/gitconfig-sandbox}"
 AGENT_DS4_BASE_URL="${AGENT_DS4_BASE_URL:-http://127.0.0.1:8000}"
 AGENT_DS4_MODEL="${AGENT_DS4_MODEL:-deepseek-v4-flash}"
-AGENT_PI_DS4_CONTEXT_WINDOW="${AGENT_PI_DS4_CONTEXT_WINDOW:-16384}"
-AGENT_PI_DS4_MAX_TOKENS="${AGENT_PI_DS4_MAX_TOKENS:-2048}"
+AGENT_PI_DS4_EXTENSION_URL="${AGENT_PI_DS4_EXTENSION_URL:-https://github.com/mitsuhiko/pi-ds4}"
+AGENT_PI_DS4_MODEL="${AGENT_PI_DS4_MODEL:-ds4/deepseek-v4-flash}"
+AGENT_PI_DS4_STATE_DIR="${AGENT_PI_DS4_STATE_DIR:-$AGENT_STATE_HOME/pi-ds4}"
 AGENT_REMOTE_SSH_HOST="${AGENT_REMOTE_SSH_HOST:-remote-accelerator.local}"
 AGENT_REMOTE_SSH_USER="${AGENT_REMOTE_SSH_USER:-$USER}"
 AGENT_REMOTE_DASHBOARD_PORT="${AGENT_REMOTE_DASHBOARD_PORT:-11000}"
@@ -257,50 +258,9 @@ fi
 if profile_enabled pi-ds4; then
   install_file "$repo_root/nono/custom-pi-ds4.json" "$AGENT_NONO_PROFILE_ROOT/custom-pi-ds4.json"
   install_tree "$repo_root/profiles/pi-ds4" "$AGENT_PROFILE_ROOT/.pi-profiles/ds4"
-  install_tree "$repo_root/pi" "$AGENT_STACK_HOME/pi"
 fi
 
 install_file "$repo_root/bondage.conf.template" "$AGENT_CONFIG_HOME/bondage.conf.template"
-
-if profile_enabled pi-ds4; then
-  ds4_openai_base="${AGENT_DS4_BASE_URL%/}"
-  if [[ "$ds4_openai_base" != */v1 ]]; then
-    ds4_openai_base="$ds4_openai_base/v1"
-  fi
-
-  tmp_pi_ds4_models="$(mktemp)"
-  cat >"$tmp_pi_ds4_models" <<EOF
-{
-  "providers": {
-    "ds4": {
-      "baseUrl": "$ds4_openai_base",
-      "apiKey": "local-ds4",
-      "api": "openai-completions",
-      "models": [
-        {
-          "id": "$AGENT_DS4_MODEL",
-          "name": "DeepSeek V4 Flash (ds4)",
-          "reasoning": false,
-          "input": ["text"],
-          "contextWindow": ${AGENT_PI_DS4_CONTEXT_WINDOW:-16384},
-          "maxTokens": ${AGENT_PI_DS4_MAX_TOKENS:-2048},
-          "compat": {
-            "supportsStore": false,
-            "supportsDeveloperRole": false,
-            "supportsReasoningEffort": false,
-            "supportsUsageInStreaming": false,
-            "maxTokensField": "max_tokens",
-            "supportsStrictMode": false
-          }
-        }
-      ]
-    }
-  }
-}
-EOF
-  install_file "$tmp_pi_ds4_models" "$AGENT_STATE_HOME/pi-ds4/models.json"
-  rm -f "$tmp_pi_ds4_models"
-fi
 
 if [[ -d "$local_dir" ]]; then
   install_tree "$local_dir/nono" "$AGENT_NONO_PROFILE_ROOT"
@@ -346,6 +306,9 @@ export AGENT_SPARK_GATEWAY_PORT="\${AGENT_SPARK_GATEWAY_PORT:-$AGENT_SPARK_GATEW
 export AGENT_SPARK_MODEL="\${AGENT_SPARK_MODEL:-$AGENT_SPARK_MODEL}"
 export AGENT_SPARK_MODEL_LABEL="\${AGENT_SPARK_MODEL_LABEL:-$AGENT_SPARK_MODEL_LABEL}"
 export AGENT_SPARK_AUTH_TOKEN="\${AGENT_SPARK_AUTH_TOKEN:-$AGENT_SPARK_AUTH_TOKEN}"
+export AGENT_PI_DS4_EXTENSION_URL="\${AGENT_PI_DS4_EXTENSION_URL:-$AGENT_PI_DS4_EXTENSION_URL}"
+export AGENT_PI_DS4_MODEL="\${AGENT_PI_DS4_MODEL:-$AGENT_PI_DS4_MODEL}"
+export AGENT_PI_DS4_STATE_DIR="\${AGENT_PI_DS4_STATE_DIR:-$AGENT_PI_DS4_STATE_DIR}"
 export WIKI_SKILL="\${WIKI_SKILL:-\$AI_WORKSPACE/llm-wiki/plugins/llm-wiki-opencode/skills/wiki-manager/SKILL.md}"
 
 for _agent_profile_aliases in \\
@@ -390,9 +353,8 @@ if profile_enabled ds4; then
   echo "  Codex ds4:        $AGENT_PROFILE_ROOT/.codex-profiles/ds4"
 fi
 if profile_enabled pi-ds4; then
-  echo "  Pi ds4:           $AGENT_PROFILE_ROOT/.pi-profiles/ds4"
-  echo "  Pi ds4 metadata:  $AGENT_STATE_HOME/pi-ds4/models.json"
-  echo "  Pi ds4 extension: $AGENT_STACK_HOME/pi/extensions/ds4-tools.ts"
+  echo "  Pi ds4 aliases:   $AGENT_PROFILE_ROOT/.pi-profiles/ds4"
+  echo "  Pi ds4 state:     $AGENT_PI_DS4_STATE_DIR"
 fi
 echo ""
 
@@ -425,6 +387,7 @@ if profile_enabled frontier || profile_enabled spark || profile_enabled ds4 || p
     echo "  type codex-ds4"
   fi
   if profile_enabled pi-ds4; then
+    echo "  pi-ds4-install"
     echo "  type pi-ds4"
   fi
 fi

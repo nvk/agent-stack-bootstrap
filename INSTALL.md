@@ -55,8 +55,11 @@ Important variables:
 - `AGENT_NONO_PROFILE_ROOT`: where `nono` profiles are installed.
 - `AGENT_DS4_BASE_URL`: local ds4 server URL.
 - `AGENT_DS4_MODEL`: local ds4 model slug.
-- `AGENT_PI_DS4_CONTEXT_WINDOW`: Pi ds4 client window. Default: `16384`.
-- `AGENT_PI_DS4_MAX_TOKENS`: Pi ds4 response cap. Default: `2048`.
+- `AGENT_PI_DS4_EXTENSION_URL`: Pi ds4 extension URL. Default:
+  `https://github.com/mitsuhiko/pi-ds4`.
+- `AGENT_PI_DS4_MODEL`: Pi ds4 model selector. Default:
+  `ds4/deepseek-v4-flash`.
+- `AGENT_PI_DS4_STATE_DIR`: isolated Pi state for the ds4 profile.
 - `AGENT_SPARK_HOST`: optional remote Spark host.
 - `AGENT_SPARK_USER`: optional remote Spark SSH user.
 - `AGENT_SPARK_MODEL`: remote Ollama model. Default: `qwen3-coder:30b`.
@@ -110,8 +113,6 @@ With the default `--profiles all`, `./install.sh` creates:
 - `$HOME/.agent-profiles/.claude-profiles/ds4`
 - `$HOME/.agent-profiles/.codex-profiles/ds4`
 - `$HOME/.agent-profiles/.pi-profiles/ds4`
-- `$HOME/.local/state/agent-stack/pi-ds4/models.json`
-- `$HOME/.local/share/agent-stack/pi/extensions/ds4-tools.ts`
 
 The exact paths can be changed in `profile.env`.
 
@@ -169,11 +170,29 @@ http://127.0.0.1:8000
 
 The wrappers expose:
 
+- `pi-ds4-install` to install the upstream `mitsuhiko/pi-ds4` extension into
+  the same isolated Pi state used by the profile
 - `claude-ds4`, alias `cds4`
 - `codex-ds4`, alias `xds4`
 - `pi-ds4`
 - `pi-ds4-rawdog`, alias `pi-ds4-direct`, for benchmark runs without `nono`
 - `pi-ds4-bench` for a quick non-interactive smoke test
+
+Before first use, install the upstream extension:
+
+```bash
+pi-ds4-install
+```
+
+This follows the public local ds4 + Pi path. The extension registers
+`ds4/deepseek-v4-flash`, starts `ds4-server` on demand, downloads/builds the
+runtime if needed, keeps a per-Pi-process lease, and exposes `/ds4` for logs.
+The default public `pi-ds4` profile starts with `--no-tools`: local smoke tests
+showed upstream ds4 chat works, while direct ds4 tool requests can stall the
+server. Use the Claude/Codex ds4 profiles for local coding work until the ds4
+tool path is reliable.
+The older custom scaffold-guard extension is preserved on the
+`archive/pi-ds4-custom-guard` branch, not installed by default.
 
 ## Safety Check
 

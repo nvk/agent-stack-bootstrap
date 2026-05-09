@@ -11,7 +11,9 @@
       "$HOME/wiki"
     ],
     "add_allow_readwrite": [
-      "$HOME/agent-workspace"
+      "$HOME/agent-workspace",
+      "$HOME/.local/state/agent-stack/pi-ds4",
+      "$HOME/.pi/ds4"
     ]
   },
   "workdir": {

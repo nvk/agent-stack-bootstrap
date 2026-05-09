@@ -92,7 +92,7 @@ jq . nono/custom-pi-ds4.json >/dev/null
 jq . profiles/spark/settings.json >/dev/null
 jq . profiles/ds4-claude/settings.json >/dev/null
 jq . profiles/ds4-codex/model_catalog.json >/dev/null
-/opt/homebrew/bin/node --check pi/extensions/ds4-tools.ts 2>/dev/null || node --check pi/extensions/ds4-tools.ts
+zsh -n profiles/pi-ds4/aliases.zsh
 bash audit.sh
 git diff --check
 ```
