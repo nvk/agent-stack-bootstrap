@@ -2,6 +2,8 @@
 
 Bootstrap templates for a local coding-agent stack.
 
+Read the broader guide at [learntoprompt.org](https://learntoprompt.org/guides/agent-stack.html).
+
 This repo is template-first by design: public files describe the shape of the
 setup, while machine-specific paths, fingerprints, project names, hosts, and
 account details are generated or kept in untracked local files.
