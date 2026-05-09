@@ -14,4 +14,5 @@ First generator target:
 - render `bondage.conf.template`
 - install `nono` profiles
 - install optional ds4 profile wrappers
+- install optional pi-ds4 extension, model metadata, and direct benchmark alias
 - run `audit.sh`

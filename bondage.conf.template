@@ -105,9 +105,31 @@ touch_policy = none
 ensure_dir = {{AGENT_STATE_HOME}}/pi-ds4
 env_set = PI_CODING_AGENT_DIR={{AGENT_STATE_HOME}}/pi-ds4
 env_set = SHELL=/bin/zsh
+env_set = DS4_PI_MAX_TOKENS={{PI_DS4_MAX_TOKENS}}
 target_arg = --offline
 target_arg = --tools
-target_arg = read,edit,write
+target_arg = read,grep,find,ls,edit,write
+target_arg = --extension
+target_arg = {{AGENT_STACK_HOME}}/pi/extensions/ds4-tools.ts
+target_arg = --provider
+target_arg = ds4
+target_arg = --model
+target_arg = {{DS4_MODEL}}
+target_arg = --thinking
+target_arg = off
+
+[profile "pi-ds4-rawdog"]
+inherits = git-env,pi-script-target
+use_envchain = false
+use_nono = false
+touch_policy = none
+ensure_dir = {{AGENT_STATE_HOME}}/pi-ds4
+env_set = PI_CODING_AGENT_DIR={{AGENT_STATE_HOME}}/pi-ds4
+env_set = SHELL=/bin/zsh
+env_set = DS4_PI_MAX_TOKENS={{PI_DS4_MAX_TOKENS}}
+target_arg = --offline
+target_arg = --tools
+target_arg = read,grep,find,ls,edit,write
 target_arg = --extension
 target_arg = {{AGENT_STACK_HOME}}/pi/extensions/ds4-tools.ts
 target_arg = --provider

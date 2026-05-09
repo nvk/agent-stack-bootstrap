@@ -17,6 +17,7 @@ Open a new shell, then check:
 ```bash
 type claude-ds4
 type codex-ds4
+type pi-ds4
 ```
 
 ## Configure
@@ -36,6 +37,8 @@ Important variables:
 - `AGENT_NONO_PROFILE_ROOT`: where `nono` profiles are installed.
 - `AGENT_DS4_BASE_URL`: local ds4 server URL.
 - `AGENT_DS4_MODEL`: local ds4 model slug.
+- `AGENT_PI_DS4_CONTEXT_WINDOW`: Pi ds4 client window. Default: `16384`.
+- `AGENT_PI_DS4_MAX_TOKENS`: Pi ds4 response cap. Default: `2048`.
 - `AGENT_REMOTE_SSH_HOST`: optional remote accelerator host.
 
 ## Existing Local Setups
@@ -79,6 +82,9 @@ generic setup.
 - `$HOME/.config/nono/profiles/custom-pi-ds4.json`
 - `$HOME/.agent-profiles/.claude-profiles/ds4`
 - `$HOME/.agent-profiles/.codex-profiles/ds4`
+- `$HOME/.agent-profiles/.pi-profiles/ds4`
+- `$HOME/.local/state/agent-stack/pi-ds4/models.json`
+- `$HOME/.local/share/agent-stack/pi/extensions/ds4-tools.ts`
 
 The exact paths can be changed in `profile.env`.
 
@@ -104,6 +110,9 @@ The wrappers expose:
 
 - `claude-ds4`, alias `cds4`
 - `codex-ds4`, alias `xds4`
+- `pi-ds4`
+- `pi-ds4-rawdog`, alias `pi-ds4-direct`, for benchmark runs without `nono`
+- `pi-ds4-bench` for a quick non-interactive smoke test
 
 ## Safety Check
 

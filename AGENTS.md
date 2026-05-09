@@ -60,6 +60,7 @@ Common profile checks:
 ```bash
 type claude-ds4
 type codex-ds4
+type pi-ds4
 ```
 
 ## Verification
@@ -75,6 +76,7 @@ jq . nono/custom-coding-agent.json >/dev/null
 jq . nono/custom-pi-ds4.json >/dev/null
 jq . profiles/ds4-claude/settings.json >/dev/null
 jq . profiles/ds4-codex/model_catalog.json >/dev/null
+/opt/homebrew/bin/node --check pi/extensions/ds4-tools.ts 2>/dev/null || node --check pi/extensions/ds4-tools.ts
 bash audit.sh
 git diff --check
 ```
@@ -87,6 +89,7 @@ rm -rf /tmp/agent-stack-install-test
 mkdir -p /tmp/agent-stack-install-test
 AGENT_STACK_PROFILE_ENV=/tmp/agent-stack-install-test/profile.env \
 AGENT_CONFIG_HOME=/tmp/agent-stack-install-test/config \
+AGENT_STACK_HOME=/tmp/agent-stack-install-test/share \
 AGENT_STATE_HOME=/tmp/agent-stack-install-test/state \
 AGENT_CACHE_HOME=/tmp/agent-stack-install-test/cache \
 AGENT_WORKSPACE=/tmp/agent-stack-install-test/workspace \
@@ -99,7 +102,7 @@ AGENT_GITCONFIG_SANDBOX=/tmp/agent-stack-install-test/config/gitconfig-sandbox \
 Then verify:
 
 ```bash
-zsh -lc 'source /tmp/agent-stack-install-test/config/shell.zsh; whence -w claude-ds4 codex-ds4 cds4 xds4'
+zsh -lc 'source /tmp/agent-stack-install-test/config/shell.zsh; whence -w claude-ds4 codex-ds4 pi-ds4 cds4 xds4'
 ```
 
 ## Editing Guidance

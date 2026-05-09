@@ -83,20 +83,27 @@ fi
 set +a
 
 AGENT_CONFIG_HOME="${AGENT_CONFIG_HOME:-$HOME/.config/agent-stack}"
+AGENT_STACK_HOME="${AGENT_STACK_HOME:-$HOME/.local/share/agent-stack}"
 AGENT_STATE_HOME="${AGENT_STATE_HOME:-$HOME/.local/state/agent-stack}"
 AGENT_CACHE_HOME="${AGENT_CACHE_HOME:-$HOME/.cache/agent-stack}"
 AGENT_WORKSPACE="${AGENT_WORKSPACE:-$HOME/agent-workspace}"
 AGENT_PROFILE_ROOT="${AGENT_PROFILE_ROOT:-$HOME/.agent-profiles}"
 AGENT_NONO_PROFILE_ROOT="${AGENT_NONO_PROFILE_ROOT:-$HOME/.config/nono/profiles}"
 AGENT_GITCONFIG_SANDBOX="${AGENT_GITCONFIG_SANDBOX:-$AGENT_CONFIG_HOME/gitconfig-sandbox}"
+AGENT_DS4_BASE_URL="${AGENT_DS4_BASE_URL:-http://127.0.0.1:8000}"
+AGENT_DS4_MODEL="${AGENT_DS4_MODEL:-deepseek-v4-flash}"
+AGENT_PI_DS4_CONTEXT_WINDOW="${AGENT_PI_DS4_CONTEXT_WINDOW:-16384}"
+AGENT_PI_DS4_MAX_TOKENS="${AGENT_PI_DS4_MAX_TOKENS:-2048}"
 
 mkdir -p \
   "$AGENT_CONFIG_HOME" \
   "$AGENT_STATE_HOME" \
   "$AGENT_CACHE_HOME" \
   "$AGENT_WORKSPACE" \
+  "$AGENT_STACK_HOME/pi/extensions" \
   "$AGENT_PROFILE_ROOT/.claude-profiles/ds4" \
   "$AGENT_PROFILE_ROOT/.codex-profiles/ds4" \
+  "$AGENT_PROFILE_ROOT/.pi-profiles/ds4" \
   "$AGENT_NONO_PROFILE_ROOT" \
   "$(dirname "$AGENT_GITCONFIG_SANDBOX")"
 
@@ -106,7 +113,47 @@ for nono_profile in "$repo_root"/nono/*.json; do
 done
 install_tree "$repo_root/profiles/ds4-claude" "$AGENT_PROFILE_ROOT/.claude-profiles/ds4"
 install_tree "$repo_root/profiles/ds4-codex" "$AGENT_PROFILE_ROOT/.codex-profiles/ds4"
+install_tree "$repo_root/profiles/pi-ds4" "$AGENT_PROFILE_ROOT/.pi-profiles/ds4"
+install_tree "$repo_root/pi" "$AGENT_STACK_HOME/pi"
 install_file "$repo_root/bondage.conf.template" "$AGENT_CONFIG_HOME/bondage.conf.template"
+
+ds4_openai_base="${AGENT_DS4_BASE_URL%/}"
+if [[ "$ds4_openai_base" != */v1 ]]; then
+  ds4_openai_base="$ds4_openai_base/v1"
+fi
+
+tmp_pi_ds4_models="$(mktemp)"
+cat >"$tmp_pi_ds4_models" <<EOF
+{
+  "providers": {
+    "ds4": {
+      "baseUrl": "$ds4_openai_base",
+      "apiKey": "local-ds4",
+      "api": "openai-completions",
+      "models": [
+        {
+          "id": "$AGENT_DS4_MODEL",
+          "name": "DeepSeek V4 Flash (ds4)",
+          "reasoning": false,
+          "input": ["text"],
+          "contextWindow": ${AGENT_PI_DS4_CONTEXT_WINDOW:-16384},
+          "maxTokens": ${AGENT_PI_DS4_MAX_TOKENS:-2048},
+          "compat": {
+            "supportsStore": false,
+            "supportsDeveloperRole": false,
+            "supportsReasoningEffort": false,
+            "supportsUsageInStreaming": false,
+            "maxTokensField": "max_tokens",
+            "supportsStrictMode": false
+          }
+        }
+      ]
+    }
+  }
+}
+EOF
+install_file "$tmp_pi_ds4_models" "$AGENT_STATE_HOME/pi-ds4/models.json"
+rm -f "$tmp_pi_ds4_models"
 
 if [[ -d "$local_dir" ]]; then
   install_tree "$local_dir/nono" "$AGENT_NONO_PROFILE_ROOT"
@@ -145,7 +192,8 @@ export WIKI_SKILL="\${WIKI_SKILL:-\$AI_WORKSPACE/llm-wiki/plugins/llm-wiki-openc
 
 for _agent_profile_aliases in \\
   "\$AGENT_PROFILE_ROOT/.claude-profiles/ds4/aliases.zsh" \\
-  "\$AGENT_PROFILE_ROOT/.codex-profiles/ds4/aliases.zsh"; do
+  "\$AGENT_PROFILE_ROOT/.codex-profiles/ds4/aliases.zsh" \\
+  "\$AGENT_PROFILE_ROOT/.pi-profiles/ds4/aliases.zsh"; do
   if [[ -r "\$_agent_profile_aliases" ]]; then
     source "\$_agent_profile_aliases"
   fi
@@ -170,6 +218,9 @@ Installed files:
   nono profiles:    $AGENT_NONO_PROFILE_ROOT
   Claude ds4:       $AGENT_PROFILE_ROOT/.claude-profiles/ds4
   Codex ds4:        $AGENT_PROFILE_ROOT/.codex-profiles/ds4
+  Pi ds4:           $AGENT_PROFILE_ROOT/.pi-profiles/ds4
+  Pi ds4 metadata:  $AGENT_STATE_HOME/pi-ds4/models.json
+  Pi ds4 extension: $AGENT_STACK_HOME/pi/extensions/ds4-tools.ts
   bondage template: $AGENT_CONFIG_HOME/bondage.conf.template
 
 Install policy:
@@ -183,6 +234,7 @@ Next step:
 Then open a new shell and test:
   type claude-ds4
   type codex-ds4
+  type pi-ds4
 
 Bondage config is staged as a template only. Render and pin it locally before
 using bondage-backed profiles.
