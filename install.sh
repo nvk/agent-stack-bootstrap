@@ -12,11 +12,11 @@ cli_profiles=""
 
 usage() {
   cat <<'EOF'
-usage: ./install.sh [--profiles all|none|spark,ds4,pi-ds4]
+usage: ./install.sh [--profiles all|none|frontier,spark,ds4,pi-ds4]
 
 Options:
   --profiles LIST     Optional profile groups to install.
-                      Supported: all, none, spark, ds4, pi-ds4.
+                      Supported: all, none, frontier, spark, ds4, pi-ds4.
   --profile NAME      Add one optional profile group. Can be repeated.
   --all-profiles      Install all optional profile groups. Default.
   --no-profiles       Install only base config, shell snippet, and templates.
@@ -155,14 +155,14 @@ validate_profiles() {
       all|none)
         saw_all_or_none=1
         ;;
-      spark|ds4|pi-ds4)
+      frontier|spark|ds4|pi-ds4)
         saw_named=1
         ;;
       "")
         ;;
       *)
         echo "unknown profile group: $profile" >&2
-        echo "supported profile groups: all, none, spark, ds4, pi-ds4" >&2
+        echo "supported profile groups: all, none, frontier, spark, ds4, pi-ds4" >&2
         exit 2
         ;;
     esac
@@ -236,6 +236,14 @@ mkdir -p \
 
 install_file "$env_file" "$AGENT_CONFIG_HOME/profile.env"
 install_file "$repo_root/nono/custom-coding-agent.json" "$AGENT_NONO_PROFILE_ROOT/custom-coding-agent.json"
+
+if profile_enabled frontier; then
+  install_file "$repo_root/nono/custom-claude.json" "$AGENT_NONO_PROFILE_ROOT/custom-claude.json"
+  install_file "$repo_root/nono/custom-codex.json" "$AGENT_NONO_PROFILE_ROOT/custom-codex.json"
+  install_file "$repo_root/nono/custom-opencode.json" "$AGENT_NONO_PROFILE_ROOT/custom-opencode.json"
+  install_file "$repo_root/nono/custom-pi.json" "$AGENT_NONO_PROFILE_ROOT/custom-pi.json"
+  install_tree "$repo_root/profiles/frontier" "$AGENT_PROFILE_ROOT/.frontier-profiles"
+fi
 
 if profile_enabled spark; then
   install_tree "$repo_root/profiles/spark" "$AGENT_PROFILE_ROOT/.claude-profiles/spark"
@@ -341,6 +349,7 @@ export AGENT_SPARK_AUTH_TOKEN="\${AGENT_SPARK_AUTH_TOKEN:-$AGENT_SPARK_AUTH_TOKE
 export WIKI_SKILL="\${WIKI_SKILL:-\$AI_WORKSPACE/llm-wiki/plugins/llm-wiki-opencode/skills/wiki-manager/SKILL.md}"
 
 for _agent_profile_aliases in \\
+  "\$AGENT_PROFILE_ROOT/.frontier-profiles/aliases.zsh" \\
   "\$AGENT_PROFILE_ROOT/.claude-profiles/spark/aliases.zsh" \\
   "\$AGENT_PROFILE_ROOT/.claude-profiles/ds4/aliases.zsh" \\
   "\$AGENT_PROFILE_ROOT/.codex-profiles/ds4/aliases.zsh" \\
@@ -373,6 +382,9 @@ EOF
 if profile_enabled spark; then
   echo "  Claude Spark:     $AGENT_PROFILE_ROOT/.claude-profiles/spark"
 fi
+if profile_enabled frontier; then
+  echo "  Frontier clients: $AGENT_PROFILE_ROOT/.frontier-profiles"
+fi
 if profile_enabled ds4; then
   echo "  Claude ds4:       $AGENT_PROFILE_ROOT/.claude-profiles/ds4"
   echo "  Codex ds4:        $AGENT_PROFILE_ROOT/.codex-profiles/ds4"
@@ -395,9 +407,16 @@ Next step:
   echo 'source "$AGENT_CONFIG_HOME/shell.zsh"' >> ~/.zshrc
 EOF
 
-if profile_enabled spark || profile_enabled ds4 || profile_enabled pi-ds4; then
+if profile_enabled frontier || profile_enabled spark || profile_enabled ds4 || profile_enabled pi-ds4; then
   echo ""
   echo "Then open a new shell and test:"
+  if profile_enabled frontier; then
+    echo "  type claude-safe"
+    echo "  type codex-safe"
+    echo "  type opencode-safe"
+    echo "  type pi-safe"
+    echo "  type frontier-safe-verify"
+  fi
   if profile_enabled spark; then
     echo "  type claude-spark"
   fi

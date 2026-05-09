@@ -1,0 +1,58 @@
+{
+  "extends": "default",
+  "meta": {
+    "name": "custom-claude",
+    "description": "Claude Code frontier-client sandbox profile"
+  },
+  "security": {
+    "groups": [
+      "deny_credentials",
+      "deny_keychains_macos",
+      "deny_browser_data_macos",
+      "deny_macos_private",
+      "deny_shell_history",
+      "deny_shell_configs",
+      "system_read_macos",
+      "system_write_macos",
+      "user_tools",
+      "homebrew_macos",
+      "user_caches_macos",
+      "node_runtime",
+      "git_config",
+      "dangerous_commands",
+      "dangerous_commands_macos",
+      "unlink_protection"
+    ]
+  },
+  "filesystem": {
+    "allow": [
+      "$TMPDIR"
+    ],
+    "read_file": [
+      "$HOME/.zshenv",
+      "$HOME/.zshrc",
+      "$HOME/.zprofile"
+    ]
+  },
+  "policy": {
+    "add_deny_access": [
+      "/Volumes"
+    ],
+    "add_allow_read": [
+      "$HOME/.config/gh",
+      "$HOME/.config/agent-stack",
+      "$HOME/wiki"
+    ],
+    "add_allow_readwrite": [
+      "$HOME/agent-workspace"
+    ],
+    "override_deny": [
+      "$HOME/.zshenv",
+      "$HOME/.zshrc",
+      "$HOME/.zprofile"
+    ]
+  },
+  "workdir": {
+    "access": "readwrite"
+  }
+}

@@ -16,6 +16,7 @@ By default, `./install.sh` installs all optional public profile groups. To
 choose only specific groups:
 
 ```bash
+./install.sh --profiles frontier
 ./install.sh --profiles spark
 ./install.sh --profiles ds4,pi-ds4
 ./install.sh --profiles none
@@ -24,6 +25,11 @@ choose only specific groups:
 Open a new shell, then check:
 
 ```bash
+type claude-safe
+type codex-safe
+type opencode-safe
+type pi-safe
+type frontier-safe-verify
 type claude-spark
 type claude-ds4
 type codex-ds4
@@ -44,7 +50,7 @@ Important variables:
 
 - `AGENT_WORKSPACE`: default repo/worktree root.
 - `AGENT_STACK_PROFILES`: optional profile groups. Default: `all`. Supported:
-  `all`, `none`, `spark`, `ds4`, `pi-ds4`.
+  `all`, `none`, `frontier`, `spark`, `ds4`, `pi-ds4`.
 - `AGENT_PROFILE_ROOT`: where optional profile wrappers are installed.
 - `AGENT_NONO_PROFILE_ROOT`: where `nono` profiles are installed.
 - `AGENT_DS4_BASE_URL`: local ds4 server URL.
@@ -94,7 +100,12 @@ With the default `--profiles all`, `./install.sh` creates:
 - `$HOME/.config/agent-stack/shell.zsh`
 - `$HOME/.config/agent-stack/bondage.conf.template`
 - `$HOME/.config/nono/profiles/custom-coding-agent.json`
+- `$HOME/.config/nono/profiles/custom-claude.json`
+- `$HOME/.config/nono/profiles/custom-codex.json`
+- `$HOME/.config/nono/profiles/custom-opencode.json`
+- `$HOME/.config/nono/profiles/custom-pi.json`
 - `$HOME/.config/nono/profiles/custom-pi-ds4.json`
+- `$HOME/.agent-profiles/.frontier-profiles`
 - `$HOME/.agent-profiles/.claude-profiles/spark`
 - `$HOME/.agent-profiles/.claude-profiles/ds4`
 - `$HOME/.agent-profiles/.codex-profiles/ds4`
@@ -103,6 +114,23 @@ With the default `--profiles all`, `./install.sh` creates:
 - `$HOME/.local/share/agent-stack/pi/extensions/ds4-tools.ts`
 
 The exact paths can be changed in `profile.env`.
+
+## Frontier Clients
+
+The frontier profile group gives you explicit safe launchers for cloud-backed
+coding agents without replacing the raw commands on your PATH.
+
+The wrappers expose:
+
+- `claude-safe`
+- `codex-safe`
+- `opencode-safe`
+- `pi-safe`
+- `frontier-safe-verify`
+
+After rendering and pinning `~/.config/bondage/bondage.conf`, the safe aliases
+run the matching `bondage` profile. If you later want the raw command names,
+alias them yourself after verifying the generated config.
 
 ## Spark
 

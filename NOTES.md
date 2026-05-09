@@ -14,6 +14,7 @@ First generator target:
 - resolve tool paths
 - render `bondage.conf.template`
 - install `nono` profiles
+- install optional frontier client safe aliases
 - install optional Spark SSH/Ollama/Claude profile wrappers
 - install optional ds4 profile wrappers
 - install optional pi-ds4 extension, model metadata, and direct benchmark alias

@@ -52,6 +52,7 @@ Common setup commands:
 
 ```bash
 ./install.sh
+./install.sh --profiles frontier
 ./install.sh --profiles spark
 ./install.sh --profiles ds4,pi-ds4
 echo 'source "$HOME/.config/agent-stack/shell.zsh"' >> ~/.zshrc
@@ -60,6 +61,11 @@ echo 'source "$HOME/.config/agent-stack/shell.zsh"' >> ~/.zshrc
 Common profile checks:
 
 ```bash
+type claude-safe
+type codex-safe
+type opencode-safe
+type pi-safe
+type frontier-safe-verify
 type claude-spark
 type claude-ds4
 type codex-ds4
@@ -77,7 +83,11 @@ bash -n profiles/spark/claude-spark
 python3 -c 'from pathlib import Path; [compile(Path(p).read_text(), p, "exec") for p in ("profiles/spark/anthropic_ollama_gateway.py", "profiles/ds4-codex/openai_responses_to_ds4.py")]'
 bash -n profiles/ds4-claude/claude-ds4
 bash -n profiles/ds4-codex/codex-ds4
+jq . nono/custom-claude.json >/dev/null
+jq . nono/custom-codex.json >/dev/null
 jq . nono/custom-coding-agent.json >/dev/null
+jq . nono/custom-opencode.json >/dev/null
+jq . nono/custom-pi.json >/dev/null
 jq . nono/custom-pi-ds4.json >/dev/null
 jq . profiles/spark/settings.json >/dev/null
 jq . profiles/ds4-claude/settings.json >/dev/null
@@ -122,10 +132,28 @@ AGENT_GITCONFIG_SANDBOX=/tmp/agent-stack-spark-test/config/gitconfig-sandbox \
 ./install.sh --profiles spark
 ```
 
+Also test a frontier-only profile install:
+
+```bash
+rm -rf /tmp/agent-stack-frontier-test
+mkdir -p /tmp/agent-stack-frontier-test
+AGENT_STACK_PROFILE_ENV=/tmp/agent-stack-frontier-test/profile.env \
+AGENT_CONFIG_HOME=/tmp/agent-stack-frontier-test/config \
+AGENT_STACK_HOME=/tmp/agent-stack-frontier-test/share \
+AGENT_STATE_HOME=/tmp/agent-stack-frontier-test/state \
+AGENT_CACHE_HOME=/tmp/agent-stack-frontier-test/cache \
+AGENT_WORKSPACE=/tmp/agent-stack-frontier-test/workspace \
+AGENT_PROFILE_ROOT=/tmp/agent-stack-frontier-test/profiles \
+AGENT_NONO_PROFILE_ROOT=/tmp/agent-stack-frontier-test/nono \
+AGENT_GITCONFIG_SANDBOX=/tmp/agent-stack-frontier-test/config/gitconfig-sandbox \
+./install.sh --profiles frontier
+```
+
 Then verify:
 
 ```bash
-zsh -lc 'source /tmp/agent-stack-install-test/config/shell.zsh; whence -w claude-spark cspark spark-ssh spark-tunnels claude-ds4 codex-ds4 pi-ds4 cds4 xds4'
+zsh -lc 'source /tmp/agent-stack-install-test/config/shell.zsh; whence -w claude-safe codex-safe opencode-safe pi-safe frontier-safe-verify claude-spark cspark spark-ssh spark-tunnels claude-ds4 codex-ds4 pi-ds4 cds4 xds4'
+zsh -lc 'source /tmp/agent-stack-frontier-test/config/shell.zsh; whence -w claude-safe codex-safe opencode-safe pi-safe frontier-safe-verify'
 zsh -lc 'source /tmp/agent-stack-spark-test/config/shell.zsh; whence -w claude-spark cspark spark-ssh spark-tunnels'
 ```
 

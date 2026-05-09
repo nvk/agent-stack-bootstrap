@@ -37,6 +37,7 @@ Public templates must not include:
 - `profile.env.sample`: variables a future installer can ask for or infer.
 - `bondage.conf.template`: launcher profile matrix with placeholder values.
 - `nono/*.json`: generic sandbox profiles that use `$HOME/agent-workspace`.
+- `profiles/frontier`: safe aliases for Claude Code, Codex, OpenCode, and Pi.
 - `profiles/spark`: Claude Code wrapper for a remote Spark Ollama server.
 - `profiles/ds4-claude`: Claude Code wrapper for a local ds4 server.
 - `profiles/ds4-codex`: Codex wrapper plus model catalog for a local ds4 server.
@@ -54,15 +55,17 @@ git clone https://github.com/nvk/agent-stack-bootstrap.git
 cd agent-stack-bootstrap
 ./install.sh
 echo 'source "$HOME/.config/agent-stack/shell.zsh"' >> ~/.zshrc
+type claude-safe codex-safe opencode-safe pi-safe frontier-safe-verify
 type claude-spark claude-ds4 codex-ds4 pi-ds4
 ```
 
 By default, `./install.sh` installs all optional profile groups. Use
-`--profiles spark`, `--profiles ds4,pi-ds4`, or `--profiles none` to choose.
+`--profiles frontier`, `--profiles spark`, `--profiles ds4,pi-ds4`, or
+`--profiles none` to choose.
 
-The installed shell snippet also exposes `cspark`, `spark-ssh`,
-`spark-dashboard`, `spark-ollama`, and `spark-tunnels` for the optional remote
-Spark profile.
+The frontier group exposes `claude-safe`, `codex-safe`, `opencode-safe`, and
+`pi-safe` instead of shadowing the raw client commands. The Spark group exposes
+`cspark`, `spark-ssh`, `spark-dashboard`, `spark-ollama`, and `spark-tunnels`.
 
 See `INSTALL.md` for the full local setup flow.
 
@@ -77,7 +80,7 @@ The eventual installer should:
 5. Render `bondage.conf.template` into the user's private
    `~/.config/bondage/bondage.conf`.
 6. Install `nono` profiles into `~/.config/nono/profiles`.
-7. Install optional ds4 profile wrappers under a local profile root.
+7. Install optional profile wrappers under a local profile root.
 
 Generated configs are private artifacts. Do not commit them back into this repo.
 
