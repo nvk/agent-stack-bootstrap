@@ -8,6 +8,67 @@ overwrite="${AGENT_STACK_OVERWRITE:-0}"
 installed_count=0
 preserved_count=0
 backup_dir=""
+cli_profiles=""
+
+usage() {
+  cat <<'EOF'
+usage: ./install.sh [--profiles all|none|spark,ds4,pi-ds4]
+
+Options:
+  --profiles LIST     Optional profile groups to install.
+                      Supported: all, none, spark, ds4, pi-ds4.
+  --profile NAME      Add one optional profile group. Can be repeated.
+  --all-profiles      Install all optional profile groups. Default.
+  --no-profiles       Install only base config, shell snippet, and templates.
+  -h, --help          Show this help.
+
+Environment:
+  AGENT_STACK_PROFILES can also be set to the same LIST values.
+EOF
+}
+
+while (($#)); do
+  case "$1" in
+    --profiles)
+      shift
+      if [[ $# -eq 0 ]]; then
+        echo "missing value for --profiles" >&2
+        exit 2
+      fi
+      cli_profiles="$1"
+      ;;
+    --profiles=*)
+      cli_profiles="${1#*=}"
+      ;;
+    --profile)
+      shift
+      if [[ $# -eq 0 ]]; then
+        echo "missing value for --profile" >&2
+        exit 2
+      fi
+      cli_profiles="${cli_profiles:+$cli_profiles,}$1"
+      ;;
+    --profile=*)
+      cli_profiles="${cli_profiles:+$cli_profiles,}${1#*=}"
+      ;;
+    --all-profiles)
+      cli_profiles="all"
+      ;;
+    --no-profiles|--no-optional-profiles)
+      cli_profiles="none"
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      echo "unknown option: $1" >&2
+      usage >&2
+      exit 2
+      ;;
+  esac
+  shift
+done
 
 backup_file() {
   local path="$1"
@@ -67,6 +128,57 @@ install_tree() {
   done < <(find "$src_dir" -type f -print0)
 }
 
+profile_enabled() {
+  local name="$1"
+  local profile
+
+  for profile in ${AGENT_STACK_PROFILES//,/ }; do
+    case "$profile" in
+      all|"$name")
+        return 0
+        ;;
+      none|"")
+        ;;
+    esac
+  done
+
+  return 1
+}
+
+validate_profiles() {
+  local saw_all_or_none=0
+  local saw_named=0
+  local profile
+
+  for profile in ${AGENT_STACK_PROFILES//,/ }; do
+    case "$profile" in
+      all|none)
+        saw_all_or_none=1
+        ;;
+      spark|ds4|pi-ds4)
+        saw_named=1
+        ;;
+      "")
+        ;;
+      *)
+        echo "unknown profile group: $profile" >&2
+        echo "supported profile groups: all, none, spark, ds4, pi-ds4" >&2
+        exit 2
+        ;;
+    esac
+  done
+
+  if (( saw_all_or_none && saw_named )); then
+    echo "do not mix all/none with named profile groups" >&2
+    exit 2
+  fi
+}
+
+if [[ -n "$cli_profiles" ]]; then
+  AGENT_STACK_PROFILES="$cli_profiles"
+  validate_profiles
+fi
+
 if [[ ! -f "$env_file" ]]; then
   mkdir -p "$(dirname "$env_file")"
   cp "$repo_root/profile.env.sample" "$env_file"
@@ -81,6 +193,9 @@ if [[ -r "$local_dir/profile.env" ]]; then
   source "$local_dir/profile.env"
 fi
 set +a
+
+AGENT_STACK_PROFILES="${cli_profiles:-${AGENT_STACK_PROFILES:-all}}"
+validate_profiles
 
 AGENT_CONFIG_HOME="${AGENT_CONFIG_HOME:-$HOME/.config/agent-stack}"
 AGENT_STACK_HOME="${AGENT_STACK_HOME:-$HOME/.local/share/agent-stack}"
@@ -116,32 +231,37 @@ mkdir -p \
   "$AGENT_STATE_HOME" \
   "$AGENT_CACHE_HOME" \
   "$AGENT_WORKSPACE" \
-  "$AGENT_STACK_HOME/pi/extensions" \
-  "$AGENT_PROFILE_ROOT/.claude-profiles/spark" \
-  "$AGENT_PROFILE_ROOT/.claude-profiles/ds4" \
-  "$AGENT_PROFILE_ROOT/.codex-profiles/ds4" \
-  "$AGENT_PROFILE_ROOT/.pi-profiles/ds4" \
   "$AGENT_NONO_PROFILE_ROOT" \
   "$(dirname "$AGENT_GITCONFIG_SANDBOX")"
 
 install_file "$env_file" "$AGENT_CONFIG_HOME/profile.env"
-for nono_profile in "$repo_root"/nono/*.json; do
-  install_file "$nono_profile" "$AGENT_NONO_PROFILE_ROOT/${nono_profile##*/}"
-done
-install_tree "$repo_root/profiles/spark" "$AGENT_PROFILE_ROOT/.claude-profiles/spark"
-install_tree "$repo_root/profiles/ds4-claude" "$AGENT_PROFILE_ROOT/.claude-profiles/ds4"
-install_tree "$repo_root/profiles/ds4-codex" "$AGENT_PROFILE_ROOT/.codex-profiles/ds4"
-install_tree "$repo_root/profiles/pi-ds4" "$AGENT_PROFILE_ROOT/.pi-profiles/ds4"
-install_tree "$repo_root/pi" "$AGENT_STACK_HOME/pi"
-install_file "$repo_root/bondage.conf.template" "$AGENT_CONFIG_HOME/bondage.conf.template"
+install_file "$repo_root/nono/custom-coding-agent.json" "$AGENT_NONO_PROFILE_ROOT/custom-coding-agent.json"
 
-ds4_openai_base="${AGENT_DS4_BASE_URL%/}"
-if [[ "$ds4_openai_base" != */v1 ]]; then
-  ds4_openai_base="$ds4_openai_base/v1"
+if profile_enabled spark; then
+  install_tree "$repo_root/profiles/spark" "$AGENT_PROFILE_ROOT/.claude-profiles/spark"
 fi
 
-tmp_pi_ds4_models="$(mktemp)"
-cat >"$tmp_pi_ds4_models" <<EOF
+if profile_enabled ds4; then
+  install_tree "$repo_root/profiles/ds4-claude" "$AGENT_PROFILE_ROOT/.claude-profiles/ds4"
+  install_tree "$repo_root/profiles/ds4-codex" "$AGENT_PROFILE_ROOT/.codex-profiles/ds4"
+fi
+
+if profile_enabled pi-ds4; then
+  install_file "$repo_root/nono/custom-pi-ds4.json" "$AGENT_NONO_PROFILE_ROOT/custom-pi-ds4.json"
+  install_tree "$repo_root/profiles/pi-ds4" "$AGENT_PROFILE_ROOT/.pi-profiles/ds4"
+  install_tree "$repo_root/pi" "$AGENT_STACK_HOME/pi"
+fi
+
+install_file "$repo_root/bondage.conf.template" "$AGENT_CONFIG_HOME/bondage.conf.template"
+
+if profile_enabled pi-ds4; then
+  ds4_openai_base="${AGENT_DS4_BASE_URL%/}"
+  if [[ "$ds4_openai_base" != */v1 ]]; then
+    ds4_openai_base="$ds4_openai_base/v1"
+  fi
+
+  tmp_pi_ds4_models="$(mktemp)"
+  cat >"$tmp_pi_ds4_models" <<EOF
 {
   "providers": {
     "ds4": {
@@ -170,8 +290,9 @@ cat >"$tmp_pi_ds4_models" <<EOF
   }
 }
 EOF
-install_file "$tmp_pi_ds4_models" "$AGENT_STATE_HOME/pi-ds4/models.json"
-rm -f "$tmp_pi_ds4_models"
+  install_file "$tmp_pi_ds4_models" "$AGENT_STATE_HOME/pi-ds4/models.json"
+  rm -f "$tmp_pi_ds4_models"
+fi
 
 if [[ -d "$local_dir" ]]; then
   install_tree "$local_dir/nono" "$AGENT_NONO_PROFILE_ROOT"
@@ -246,28 +367,50 @@ Installed files:
   env:              $AGENT_CONFIG_HOME/profile.env
   shell snippet:    $AGENT_CONFIG_HOME/shell.zsh
   nono profiles:    $AGENT_NONO_PROFILE_ROOT
-  Claude Spark:     $AGENT_PROFILE_ROOT/.claude-profiles/spark
-  Claude ds4:       $AGENT_PROFILE_ROOT/.claude-profiles/ds4
-  Codex ds4:        $AGENT_PROFILE_ROOT/.codex-profiles/ds4
-  Pi ds4:           $AGENT_PROFILE_ROOT/.pi-profiles/ds4
-  Pi ds4 metadata:  $AGENT_STATE_HOME/pi-ds4/models.json
-  Pi ds4 extension: $AGENT_STACK_HOME/pi/extensions/ds4-tools.ts
   bondage template: $AGENT_CONFIG_HOME/bondage.conf.template
+EOF
 
+if profile_enabled spark; then
+  echo "  Claude Spark:     $AGENT_PROFILE_ROOT/.claude-profiles/spark"
+fi
+if profile_enabled ds4; then
+  echo "  Claude ds4:       $AGENT_PROFILE_ROOT/.claude-profiles/ds4"
+  echo "  Codex ds4:        $AGENT_PROFILE_ROOT/.codex-profiles/ds4"
+fi
+if profile_enabled pi-ds4; then
+  echo "  Pi ds4:           $AGENT_PROFILE_ROOT/.pi-profiles/ds4"
+  echo "  Pi ds4 metadata:  $AGENT_STATE_HOME/pi-ds4/models.json"
+  echo "  Pi ds4 extension: $AGENT_STACK_HOME/pi/extensions/ds4-tools.ts"
+fi
+echo ""
+
+cat <<EOF
 Install policy:
+  profiles:          $AGENT_STACK_PROFILES
   installed/updated: $installed_count
   preserved:         $preserved_count
   overwrite mode:    $overwrite
 
 Next step:
   echo 'source "$AGENT_CONFIG_HOME/shell.zsh"' >> ~/.zshrc
+EOF
 
-Then open a new shell and test:
-  type claude-spark
-  type claude-ds4
-  type codex-ds4
-  type pi-ds4
+if profile_enabled spark || profile_enabled ds4 || profile_enabled pi-ds4; then
+  echo ""
+  echo "Then open a new shell and test:"
+  if profile_enabled spark; then
+    echo "  type claude-spark"
+  fi
+  if profile_enabled ds4; then
+    echo "  type claude-ds4"
+    echo "  type codex-ds4"
+  fi
+  if profile_enabled pi-ds4; then
+    echo "  type pi-ds4"
+  fi
+fi
 
+cat <<EOF
 Bondage config is staged as a template only. Render and pin it locally before
 using bondage-backed profiles.
 EOF

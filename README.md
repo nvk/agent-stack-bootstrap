@@ -57,6 +57,9 @@ echo 'source "$HOME/.config/agent-stack/shell.zsh"' >> ~/.zshrc
 type claude-spark claude-ds4 codex-ds4 pi-ds4
 ```
 
+By default, `./install.sh` installs all optional profile groups. Use
+`--profiles spark`, `--profiles ds4,pi-ds4`, or `--profiles none` to choose.
+
 The installed shell snippet also exposes `cspark`, `spark-ssh`,
 `spark-dashboard`, `spark-ollama`, and `spark-tunnels` for the optional remote
 Spark profile.

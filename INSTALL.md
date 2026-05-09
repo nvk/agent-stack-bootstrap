@@ -12,6 +12,15 @@ cd agent-stack-bootstrap
 echo 'source "$HOME/.config/agent-stack/shell.zsh"' >> ~/.zshrc
 ```
 
+By default, `./install.sh` installs all optional public profile groups. To
+choose only specific groups:
+
+```bash
+./install.sh --profiles spark
+./install.sh --profiles ds4,pi-ds4
+./install.sh --profiles none
+```
+
 Open a new shell, then check:
 
 ```bash
@@ -34,6 +43,8 @@ installation:
 Important variables:
 
 - `AGENT_WORKSPACE`: default repo/worktree root.
+- `AGENT_STACK_PROFILES`: optional profile groups. Default: `all`. Supported:
+  `all`, `none`, `spark`, `ds4`, `pi-ds4`.
 - `AGENT_PROFILE_ROOT`: where optional profile wrappers are installed.
 - `AGENT_NONO_PROFILE_ROOT`: where `nono` profiles are installed.
 - `AGENT_DS4_BASE_URL`: local ds4 server URL.
@@ -77,7 +88,7 @@ generic setup.
 
 ## What Gets Installed
 
-`./install.sh` creates:
+With the default `--profiles all`, `./install.sh` creates:
 
 - `$HOME/.config/agent-stack/profile.env`
 - `$HOME/.config/agent-stack/shell.zsh`

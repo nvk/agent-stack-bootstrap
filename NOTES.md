@@ -10,6 +10,7 @@ Initial scope:
 
 First generator target:
 - read `profile.env`
+- honor selected optional profile groups
 - resolve tool paths
 - render `bondage.conf.template`
 - install `nono` profiles

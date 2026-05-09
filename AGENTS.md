@@ -52,6 +52,8 @@ Common setup commands:
 
 ```bash
 ./install.sh
+./install.sh --profiles spark
+./install.sh --profiles ds4,pi-ds4
 echo 'source "$HOME/.config/agent-stack/shell.zsh"' >> ~/.zshrc
 ```
 
@@ -103,10 +105,28 @@ AGENT_GITCONFIG_SANDBOX=/tmp/agent-stack-install-test/config/gitconfig-sandbox \
 ./install.sh
 ```
 
+Also test a selected profile install:
+
+```bash
+rm -rf /tmp/agent-stack-spark-test
+mkdir -p /tmp/agent-stack-spark-test
+AGENT_STACK_PROFILE_ENV=/tmp/agent-stack-spark-test/profile.env \
+AGENT_CONFIG_HOME=/tmp/agent-stack-spark-test/config \
+AGENT_STACK_HOME=/tmp/agent-stack-spark-test/share \
+AGENT_STATE_HOME=/tmp/agent-stack-spark-test/state \
+AGENT_CACHE_HOME=/tmp/agent-stack-spark-test/cache \
+AGENT_WORKSPACE=/tmp/agent-stack-spark-test/workspace \
+AGENT_PROFILE_ROOT=/tmp/agent-stack-spark-test/profiles \
+AGENT_NONO_PROFILE_ROOT=/tmp/agent-stack-spark-test/nono \
+AGENT_GITCONFIG_SANDBOX=/tmp/agent-stack-spark-test/config/gitconfig-sandbox \
+./install.sh --profiles spark
+```
+
 Then verify:
 
 ```bash
 zsh -lc 'source /tmp/agent-stack-install-test/config/shell.zsh; whence -w claude-spark cspark spark-ssh spark-tunnels claude-ds4 codex-ds4 pi-ds4 cds4 xds4'
+zsh -lc 'source /tmp/agent-stack-spark-test/config/shell.zsh; whence -w claude-spark cspark spark-ssh spark-tunnels'
 ```
 
 ## Editing Guidance
