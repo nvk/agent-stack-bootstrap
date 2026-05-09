@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+PROFILE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SETTINGS="$PROFILE_DIR/settings.json"
+
+DS4_BASE_URL="${DS4_BASE_URL:-http://127.0.0.1:8000}"
+DS4_API_KEY="${DS4_API_KEY:-ds4-local}"
+DS4_MODEL="${DS4_MODEL:-deepseek-v4-flash}"
+DS4_MODEL_LABEL="${DS4_MODEL_LABEL:-Local DS4}"
+
+if ! curl -fsS "${DS4_BASE_URL}/v1/models" >/dev/null 2>&1; then
+  cat >&2 <<EOF
+ds4-server is not reachable at ${DS4_BASE_URL}.
+Start it first, then retry this profile.
+EOF
+  exit 1
+fi
+
+export ANTHROPIC_BASE_URL="$DS4_BASE_URL"
+export ANTHROPIC_API_KEY="$DS4_API_KEY"
+export ANTHROPIC_AUTH_TOKEN="$DS4_API_KEY"
+export ANTHROPIC_CUSTOM_MODEL_OPTION="$DS4_MODEL"
+export ANTHROPIC_CUSTOM_MODEL_OPTION_NAME="$DS4_MODEL_LABEL"
+export ANTHROPIC_CUSTOM_MODEL_OPTION_DESCRIPTION="Local ds4 server on ${DS4_BASE_URL}"
+export ANTHROPIC_DEFAULT_SONNET_MODEL="$DS4_MODEL"
+export ANTHROPIC_DEFAULT_HAIKU_MODEL="$DS4_MODEL"
+export ANTHROPIC_DEFAULT_OPUS_MODEL="$DS4_MODEL"
+export CLAUDE_CODE_SUBAGENT_MODEL="$DS4_MODEL"
+export CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
+export CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY=0
+
+exec claude --settings "$SETTINGS" --model "$DS4_MODEL" "$@"

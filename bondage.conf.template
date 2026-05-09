@@ -1,0 +1,130 @@
+# Render this template into ~/.config/bondage/bondage.conf.
+# bondage requires literal absolute paths; it does not expand shell variables.
+
+[global]
+envchain = {{ENVCHAIN_BIN}}
+envchain_fp = sha256:replace-me
+nono = {{NONO_BIN}}
+nono_fp = sha256:replace-me
+nono_profile_root = {{NONO_PROFILE_ROOT}}
+touchid = {{TOUCHID_BIN}}
+touchid_fp = sha256:replace-me
+tool_root = {{AGENT_TOOLS_HOME}}
+
+[defaults "agent-nono"]
+nono_allow_cwd = true
+nono_allow_dir = {{AGENT_WORKSPACE}}
+nono_allow_file = /dev/tty
+nono_allow_file = /dev/null
+nono_read_file = /dev/urandom
+
+[defaults "git-env"]
+env_set = GIT_CONFIG_GLOBAL={{AGENT_GITCONFIG_SANDBOX}}
+env_command = GH_TOKEN={{GH_BIN}} auth token
+env_command = GITHUB_TOKEN={{GH_BIN}} auth token
+
+[defaults "codex-env"]
+env_set = GIT_TERMINAL_PROMPT=0
+
+[defaults "claude-auto"]
+target_arg = --permission-mode
+target_arg = auto
+
+[defaults "codex-external-sandbox"]
+target_arg = --dangerously-bypass-approvals-and-sandbox
+
+[defaults "claude-target"]
+target_kind = native
+target = {{CLAUDE_BIN}}
+target_fp = sha256:replace-me
+
+[defaults "codex-target"]
+target_kind = native
+target = {{CODEX_BIN}}
+target_fp = sha256:replace-me
+
+[defaults "opencode-script-target"]
+target_kind = script
+target = {{OPENCODE_SCRIPT}}
+target_fp = sha256:replace-me
+interpreter = {{NODE_BIN}}
+interpreter_fp = sha256:replace-me
+package_root = {{OPENCODE_PACKAGE_ROOT}}
+package_tree_fp = sha256:replace-me
+
+[defaults "pi-script-target"]
+target_kind = script
+target = {{PI_SCRIPT}}
+target_fp = sha256:replace-me
+interpreter = {{NODE_BIN}}
+interpreter_fp = sha256:replace-me
+package_root = {{PI_PACKAGE_ROOT}}
+package_tree_fp = sha256:replace-me
+
+[defaults "agent-namespaces"]
+namespace = {{OPENAI_NAMESPACE}},{{GEMINI_NAMESPACE}},{{XAI_NAMESPACE}},{{ANTHROPIC_NAMESPACE}}
+
+[defaults "pi-state"]
+ensure_dir = {{AGENT_STATE_HOME}}/pi
+
+[profile "claude"]
+inherits = agent-nono,git-env,claude-auto,claude-target
+use_envchain = false
+use_nono = true
+nono_profile = custom-claude
+touch_policy = none
+
+[profile "codex"]
+inherits = agent-nono,git-env,codex-env,codex-external-sandbox,codex-target
+use_envchain = false
+use_nono = true
+nono_profile = custom-codex
+touch_policy = none
+env_set = NONO_ACTIVE_PROFILE=custom-codex
+
+[profile "opencode"]
+inherits = agent-nono,git-env,opencode-script-target,agent-namespaces
+use_envchain = true
+use_nono = true
+nono_profile = custom-opencode
+touch_policy = prompt
+
+[profile "pi"]
+inherits = agent-nono,git-env,pi-script-target,agent-namespaces,pi-state
+use_envchain = true
+use_nono = true
+nono_profile = custom-pi
+touch_policy = prompt
+
+[profile "pi-ds4"]
+inherits = agent-nono,git-env,pi-script-target
+use_envchain = false
+use_nono = true
+nono_profile = custom-pi-ds4
+touch_policy = none
+ensure_dir = {{AGENT_STATE_HOME}}/pi-ds4
+env_set = PI_CODING_AGENT_DIR={{AGENT_STATE_HOME}}/pi-ds4
+env_set = SHELL=/bin/zsh
+target_arg = --offline
+target_arg = --tools
+target_arg = read,edit,write
+target_arg = --extension
+target_arg = {{AGENT_STACK_HOME}}/pi/extensions/ds4-tools.ts
+target_arg = --provider
+target_arg = ds4
+target_arg = --model
+target_arg = {{DS4_MODEL}}
+target_arg = --thinking
+target_arg = off
+
+[profile "claude-rawdog"]
+inherits = git-env,claude-target
+use_envchain = false
+use_nono = false
+touch_policy = none
+
+[profile "codex-rawdog"]
+inherits = git-env,codex-env,codex-target
+use_envchain = false
+use_nono = false
+touch_policy = none

@@ -1,0 +1,44 @@
+{
+  "models": [
+    {
+      "slug": "deepseek-v4-flash",
+      "display_name": "DeepSeek V4 Flash (ds4)",
+      "description": "Local ds4 DeepSeek V4 Flash server.",
+      "default_reasoning_level": "low",
+      "supported_reasoning_levels": [
+        {
+          "effort": "low",
+          "description": "Fast local responses with minimal hidden reasoning overhead"
+        }
+      ],
+      "base_instructions": "You are Codex, a coding agent running against a local ds4 backend. Follow the user's instructions, use the available tools carefully, keep responses concise, and prefer small, verifiable changes.",
+      "shell_type": "shell_command",
+      "visibility": "list",
+      "supported_in_api": true,
+      "priority": 100,
+      "additional_speed_tiers": [],
+      "availability_nux": null,
+      "upgrade": null,
+      "supports_reasoning_summaries": false,
+      "default_reasoning_summary": "none",
+      "support_verbosity": false,
+      "default_verbosity": "low",
+      "apply_patch_tool_type": "freeform",
+      "web_search_tool_type": "text",
+      "truncation_policy": {
+        "mode": "tokens",
+        "limit": 8000
+      },
+      "supports_parallel_tool_calls": false,
+      "supports_image_detail_original": false,
+      "context_window": 80000,
+      "max_context_window": 80000,
+      "effective_context_window_percent": 80,
+      "experimental_supported_tools": [],
+      "input_modalities": [
+        "text"
+      ],
+      "supports_search_tool": false
+    }
+  ]
+}

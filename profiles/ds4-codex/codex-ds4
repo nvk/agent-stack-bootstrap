@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+PROFILE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SHIM="$PROFILE_DIR/openai_responses_to_ds4.py"
+CATALOG="$PROFILE_DIR/model_catalog.json"
+STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
+LOG="${DS4_RESPONSES_LOG:-$STATE_HOME/agent-stack/ds4-responses-shim.log}"
+
+DS4_BASE_URL="${DS4_BASE_URL:-http://127.0.0.1:8000}"
+DS4_API_KEY="${DS4_API_KEY:-ds4-local}"
+DS4_RESPONSES_PORT="${DS4_RESPONSES_PORT:-4817}"
+DS4_RESPONSES_URL="http://127.0.0.1:${DS4_RESPONSES_PORT}"
+DS4_CONTEXT_WINDOW="${DS4_CONTEXT_WINDOW:-80000}"
+DS4_AUTO_COMPACT_TOKEN_LIMIT="${DS4_AUTO_COMPACT_TOKEN_LIMIT:-64000}"
+DS4_MODEL="${DS4_MODEL:-deepseek-v4-flash}"
+
+if [[ ! -r "$SHIM" ]]; then
+  echo "missing ds4 Responses shim: $SHIM" >&2
+  exit 1
+fi
+
+mkdir -p "$(dirname "$LOG")"
+
+if ! curl -fsS "${DS4_BASE_URL}/v1/models" >/dev/null 2>&1; then
+  cat >&2 <<EOF
+ds4-server is not reachable at ${DS4_BASE_URL}.
+Start it first, then retry this profile.
+EOF
+  exit 1
+fi
+
+if ! curl -fsS "${DS4_RESPONSES_URL}/health" >/dev/null 2>&1; then
+  nohup python3 "$SHIM" \
+    --host 127.0.0.1 \
+    --port "$DS4_RESPONSES_PORT" \
+    --ds4 "$DS4_BASE_URL" \
+    --model "$DS4_MODEL" \
+    >>"$LOG" 2>&1 &
+fi
+
+for _ in {1..50}; do
+  if curl -fsS "${DS4_RESPONSES_URL}/health" >/dev/null 2>&1; then
+    break
+  fi
+  sleep 0.2
+done
+
+if ! curl -fsS "${DS4_RESPONSES_URL}/health" >/dev/null 2>&1; then
+  echo "ds4 Responses adapter did not start; see $LOG" >&2
+  exit 1
+fi
+
+export DS4_API_KEY
+export OPENAI_API_KEY="${OPENAI_API_KEY:-$DS4_API_KEY}"
+
+codex_config=(
+  -c 'model_provider="ds4_responses"'
+  -c 'model_providers.ds4_responses.name="ds4 local responses shim"'
+  -c "model_providers.ds4_responses.base_url=\"${DS4_RESPONSES_URL}/v1\""
+  -c 'model_providers.ds4_responses.env_key="DS4_API_KEY"'
+  -c 'model_providers.ds4_responses.wire_api="responses"'
+  -c "model_catalog_json=\"${CATALOG}\""
+  -c "model_context_window=${DS4_CONTEXT_WINDOW}"
+  -c "model_auto_compact_token_limit=${DS4_AUTO_COMPACT_TOKEN_LIMIT}"
+  -c 'model_supports_reasoning_summaries=false'
+  -c 'model_reasoning_effort="low"'
+)
+
+exec codex "${codex_config[@]}" -m "$DS4_MODEL" "$@"

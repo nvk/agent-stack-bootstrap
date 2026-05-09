@@ -1,0 +1,20 @@
+{
+  "extends": "custom-coding-agent",
+  "meta": {
+    "name": "custom-pi-ds4",
+    "description": "Generic Pi sandbox for a local ds4 coding model"
+  },
+  "policy": {
+    "add_allow_read": [
+      "$HOME/.config/gh",
+      "$HOME/.config/agent-stack",
+      "$HOME/wiki"
+    ],
+    "add_allow_readwrite": [
+      "$HOME/agent-workspace"
+    ]
+  },
+  "workdir": {
+    "access": "readwrite"
+  }
+}

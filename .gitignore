@@ -1,0 +1,19 @@
+.DS_Store
+*.log
+*.pyc
+__pycache__/
+
+# Rendered local configs and machine-specific overrides.
+.env
+profile.env
+local.env
+bondage.conf
+settings.local.json
+config.local.toml
+
+# Private local overlay payloads are ignored by local/.gitignore.
+
+# Runtime state created by local profile wrappers.
+state/
+cache/
+tmp/
