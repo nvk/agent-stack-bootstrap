@@ -4,8 +4,8 @@
     "name": "custom-codex",
     "description": "Codex frontier-client sandbox profile"
   },
-  "security": {
-    "groups": [
+  "groups": {
+    "include": [
       "deny_credentials",
       "deny_keychains_macos",
       "deny_browser_data_macos",
@@ -26,27 +26,23 @@
   },
   "filesystem": {
     "allow": [
-      "$TMPDIR"
+      "$TMPDIR",
+      "$HOME/agent-workspace"
     ],
     "read_file": [
       "$HOME/.zshenv",
       "$HOME/.zshrc",
       "$HOME/.zprofile"
-    ]
-  },
-  "policy": {
-    "add_deny_access": [
-      "/Volumes"
     ],
-    "add_allow_read": [
+    "read": [
       "$HOME/.config/gh",
       "$HOME/.config/agent-stack",
       "$HOME/wiki"
     ],
-    "add_allow_readwrite": [
-      "$HOME/agent-workspace"
+    "deny": [
+      "/Volumes"
     ],
-    "override_deny": [
+    "bypass_protection": [
       "$HOME/.zshenv",
       "$HOME/.zshrc",
       "$HOME/.zprofile"

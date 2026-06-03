@@ -236,6 +236,8 @@ mkdir -p \
   "$(dirname "$AGENT_GITCONFIG_SANDBOX")"
 
 install_file "$env_file" "$AGENT_CONFIG_HOME/profile.env"
+install_file "$repo_root/requirements.env" "$AGENT_CONFIG_HOME/requirements.env"
+install_file "$repo_root/version-check.sh" "$AGENT_CONFIG_HOME/version-check.sh" "0755"
 install_file "$repo_root/nono/custom-coding-agent.json" "$AGENT_NONO_PROFILE_ROOT/custom-coding-agent.json"
 
 if profile_enabled frontier; then
@@ -295,6 +297,8 @@ cat >"$tmp_shell" <<EOF
 
 export AI_WORKSPACE="\${AI_WORKSPACE:-$AGENT_WORKSPACE}"
 export AGENT_PROFILE_ROOT="\${AGENT_PROFILE_ROOT:-$AGENT_PROFILE_ROOT}"
+export AGENT_STACK_REQUIREMENTS="\${AGENT_STACK_REQUIREMENTS:-$AGENT_CONFIG_HOME/requirements.env}"
+export AGENT_STACK_VERSION_CHECK="\${AGENT_STACK_VERSION_CHECK:-$AGENT_CONFIG_HOME/version-check.sh}"
 export AGENT_SPARK_HOST="\${AGENT_SPARK_HOST:-$AGENT_SPARK_HOST}"
 export AGENT_SPARK_USER="\${AGENT_SPARK_USER:-$AGENT_SPARK_USER}"
 export AGENT_SPARK_SSH_CONFIG="\${AGENT_SPARK_SSH_CONFIG:-$AGENT_SPARK_SSH_CONFIG}"
@@ -310,6 +314,14 @@ export AGENT_PI_DS4_EXTENSION_URL="\${AGENT_PI_DS4_EXTENSION_URL:-$AGENT_PI_DS4_
 export AGENT_PI_DS4_MODEL="\${AGENT_PI_DS4_MODEL:-$AGENT_PI_DS4_MODEL}"
 export AGENT_PI_DS4_STATE_DIR="\${AGENT_PI_DS4_STATE_DIR:-$AGENT_PI_DS4_STATE_DIR}"
 export WIKI_SKILL="\${WIKI_SKILL:-\$AI_WORKSPACE/llm-wiki/plugins/llm-wiki-opencode/skills/wiki-manager/SKILL.md}"
+
+agent-stack-version-check() {
+  if [[ ! -x "\$AGENT_STACK_VERSION_CHECK" ]]; then
+    echo "agent-stack-version-check: checker not executable: \$AGENT_STACK_VERSION_CHECK" >&2
+    return 1
+  fi
+  "\$AGENT_STACK_VERSION_CHECK" "\$@"
+}
 
 for _agent_profile_aliases in \\
   "\$AGENT_PROFILE_ROOT/.frontier-profiles/aliases.zsh" \\
@@ -377,6 +389,7 @@ if profile_enabled frontier || profile_enabled spark || profile_enabled ds4 || p
     echo "  type codex-safe"
     echo "  type opencode-safe"
     echo "  type pi-safe"
+    echo "  agent-stack-version-check --strict"
     echo "  type frontier-safe-verify"
   fi
   if profile_enabled spark; then
@@ -396,6 +409,11 @@ cat <<EOF
 Bondage config is staged as a template only. Render and pin it locally before
 using bondage-backed profiles.
 EOF
+
+if [[ "${AGENT_STACK_SKIP_VERSION_CHECK:-0}" != "1" && -x "$AGENT_CONFIG_HOME/version-check.sh" ]]; then
+  echo ""
+  "$AGENT_CONFIG_HOME/version-check.sh" --warn || true
+fi
 
 if [[ -n "$backup_dir" ]]; then
   echo "backups: $backup_dir"

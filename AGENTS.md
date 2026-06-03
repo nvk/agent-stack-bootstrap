@@ -79,6 +79,8 @@ Before finishing changes, run:
 ```bash
 bash -n install.sh
 bash -n audit.sh
+bash -n version-check.sh
+bash version-check.sh --warn
 bash -n profiles/spark/claude-spark
 python3 -c 'from pathlib import Path; [compile(Path(p).read_text(), p, "exec") for p in ("profiles/spark/anthropic_ollama_gateway.py", "profiles/ds4-codex/openai_responses_to_ds4.py")]'
 bash -n profiles/ds4-claude/claude-ds4
@@ -93,6 +95,7 @@ jq . profiles/spark/settings.json >/dev/null
 jq . profiles/ds4-claude/settings.json >/dev/null
 jq . profiles/ds4-codex/model_catalog.json >/dev/null
 zsh -n profiles/pi-ds4/aliases.zsh
+zsh -n profiles/frontier/aliases.zsh
 bash audit.sh
 git diff --check
 ```

@@ -4,13 +4,13 @@
     "name": "custom-pi-ds4",
     "description": "Generic Pi sandbox for a local ds4 coding model"
   },
-  "policy": {
-    "add_allow_read": [
+  "filesystem": {
+    "read": [
       "$HOME/.config/gh",
       "$HOME/.config/agent-stack",
       "$HOME/wiki"
     ],
-    "add_allow_readwrite": [
+    "allow": [
       "$HOME/agent-workspace",
       "$HOME/.local/state/agent-stack/pi-ds4",
       "$HOME/.pi/ds4"

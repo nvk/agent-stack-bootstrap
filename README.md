@@ -35,6 +35,8 @@ Public templates must not include:
 - `INSTALL.md`: clone and local install flow.
 - `install.sh`: copies templates into local config/profile directories.
 - `profile.env.sample`: variables a future installer can ask for or infer.
+- `requirements.env`: tested external tool version ranges.
+- `version-check.sh`: compatibility checker used by install and safe wrappers.
 - `bondage.conf.template`: launcher profile matrix with placeholder values.
 - `nono/*.json`: generic sandbox profiles that use `$HOME/agent-workspace`.
 - `profiles/frontier`: safe aliases for Claude Code, Codex, OpenCode, and Pi.
@@ -56,6 +58,7 @@ cd agent-stack-bootstrap
 ./install.sh
 echo 'source "$HOME/.config/agent-stack/shell.zsh"' >> ~/.zshrc
 type claude-safe codex-safe opencode-safe pi-safe frontier-safe-verify
+agent-stack-version-check --strict
 type claude-spark claude-ds4 codex-ds4 pi-ds4
 ```
 
@@ -83,11 +86,12 @@ The eventual installer should:
 1. Copy `profile.env.sample` to an untracked local env file.
 2. Ask for local roots and optional remote accelerator settings.
 3. Resolve exact tool paths with `command -v` or package-manager metadata.
-4. Run `bondage repin` or equivalent verification locally.
-5. Render `bondage.conf.template` into the user's private
+4. Check external tool versions against `requirements.env`.
+5. Run `bondage repin` or equivalent verification locally.
+6. Render `bondage.conf.template` into the user's private
    `~/.config/bondage/bondage.conf`.
-6. Install `nono` profiles into `~/.config/nono/profiles`.
-7. Install optional profile wrappers under a local profile root.
+7. Install `nono` profiles into `~/.config/nono/profiles`.
+8. Install optional profile wrappers under a local profile root.
 
 Generated configs are private artifacts. Do not commit them back into this repo.
 

@@ -29,6 +29,7 @@ type claude-safe
 type codex-safe
 type opencode-safe
 type pi-safe
+agent-stack-version-check --strict
 type frontier-safe-verify
 type claude-spark
 type claude-ds4
@@ -51,6 +52,10 @@ Important variables:
 - `AGENT_WORKSPACE`: default repo/worktree root.
 - `AGENT_STACK_PROFILES`: optional profile groups. Default: `all`. Supported:
   `all`, `none`, `frontier`, `spark`, `ds4`, `pi-ds4`.
+- `AGENT_STACK_REQUIREMENTS`: requirements file used by
+  `agent-stack-version-check`. Default: `$AGENT_CONFIG_HOME/requirements.env`.
+- `AGENT_STACK_SKIP_VERSION_CHECK`: set to `1` only for one-off debugging after
+  manually validating the stack.
 - `AGENT_PROFILE_ROOT`: where optional profile wrappers are installed.
 - `AGENT_NONO_PROFILE_ROOT`: where `nono` profiles are installed.
 - `AGENT_DS4_BASE_URL`: local ds4 server URL.
@@ -100,6 +105,8 @@ generic setup.
 With the default `--profiles all`, `./install.sh` creates:
 
 - `$HOME/.config/agent-stack/profile.env`
+- `$HOME/.config/agent-stack/requirements.env`
+- `$HOME/.config/agent-stack/version-check.sh`
 - `$HOME/.config/agent-stack/shell.zsh`
 - `$HOME/.config/agent-stack/bondage.conf.template`
 - `$HOME/.config/nono/profiles/custom-coding-agent.json`
@@ -130,8 +137,20 @@ The wrappers expose:
 - `frontier-safe-verify`
 
 After rendering and pinning `~/.config/bondage/bondage.conf`, the safe aliases
+first enforce the tested external tool versions from `requirements.env`, then
 run the matching `bondage` profile. If you later want the raw command names,
 alias them yourself after verifying the generated config.
+
+Run a compatibility check explicitly with:
+
+```bash
+agent-stack-version-check --strict
+```
+
+If a new `nono`, Codex, Node, or other upstream release needs testing, update
+`requirements.env` only after rerunning the stack smoke tests. Private overlays
+can also set `AGENT_STACK_REQUIRE_NONO_PACKS` to exact `nono` pack versions,
+for example `always-further/codex=0.0.12`.
 
 ## Spark
 
